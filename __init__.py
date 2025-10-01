@@ -7,6 +7,7 @@ from nonebot import get_driver, on_command, on_keyword
 from nonebot.adapters.onebot.v11 import GroupMessageEvent, MessageEvent, Message
 from nonebot.params import CommandArg
 from nonebot.typing import T_State
+from nonebot.permission import SUPERUSER
 
 # 插件数据存储路径
 DATA_PATH = "data/questions.json"
@@ -38,6 +39,7 @@ def save_data():
 next_question = on_command("a下一题")
 switch_question = on_command("a切换题目")
 ranking = on_command("a排行榜")
+add_question = on_command("a添加题目", permission=SUPERUSER)
 answer = on_keyword({"答"}, priority=5)
 
 # 处理a下一题
@@ -101,6 +103,41 @@ async def handle_ranking(event: GroupMessageEvent):
         return
     
     await ranking.send("答题排行榜:\n" + "\n".join(leaderboard))
+
+# 处理添加题目
+@add_question.handle()
+async def handle_add_question(event: MessageEvent, msg: Message = CommandArg()):
+    content = msg.extract_plain_text().strip()
+    if not content:
+        await add_question.send("请提供题目和答案，格式: a添加题目 问题|答案")
+        return
+    
+    # 解析题目和答案
+    parts = content.split("|", 1)
+    if len(parts) < 2:
+        await add_question.send("格式错误，请使用'|'分隔问题和答案")
+        return
+    
+    question_text = parts[0].strip()
+    answer_text = parts[1].strip()
+    
+    if not question_text or not answer_text:
+        await add_question.send("问题和答案不能为空")
+        return
+    
+    # 生成新题目ID
+    new_id = max([q["id"] for q in plugin_data["questions"]], default=0) + 1
+    
+    # 添加新题目
+    new_question = {
+        "id": new_id,
+        "question": question_text,
+        "answer": answer_text
+    }
+    plugin_data["questions"].append(new_question)
+    save_data()
+    
+    await add_question.send(f"添加成功！题目ID: {new_id}\n问题: {question_text}\n答案: {answer_text}")
 
 # 处理答题
 @answer.handle()
