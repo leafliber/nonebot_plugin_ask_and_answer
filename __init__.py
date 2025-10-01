@@ -38,7 +38,7 @@ def save_data():
 # 命令注册
 next_question = on_command("a下一题")
 switch_question = on_command("a切换题目")
-question_answered = on_command("aa题目作答情况")
+question_answered = on_command("a题目作答情况")
 ranking = on_command("a排行榜")
 add_question = on_command("a添加题目", permission=SUPERUSER)
 clear_questions = on_command("a清空题目", permission=SUPERUSER)
