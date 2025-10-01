@@ -40,6 +40,7 @@ next_question = on_command("a下一题")
 switch_question = on_command("a切换题目")
 ranking = on_command("a排行榜")
 add_question = on_command("a添加题目", permission=SUPERUSER)
+clear_questions = on_command("a清空题目", permission=SUPERUSER)
 answer = on_keyword({"答"}, priority=5)
 
 # 处理a下一题
@@ -138,6 +139,28 @@ async def handle_add_question(event: MessageEvent, msg: Message = CommandArg()):
     save_data()
     
     await add_question.send(f"添加成功！题目ID: {new_id}\n问题: {question_text}\n答案: {answer_text}")
+
+@clear_questions.handle()
+async def handle_clear_questions(event: MessageEvent):
+    # 确认操作
+    await clear_questions.send("⚠️ 确定要清空所有题目吗？这将删除所有题目和答题记录！")
+    await clear_questions.send("请回复 '确认清空' 来确认操作")
+    
+    # 等待用户确认
+    confirm = await clear_questions.receive()
+    confirm_msg = confirm.get_plaintext().strip()
+    
+    if confirm_msg != "确认清空":
+        await clear_questions.send("操作已取消")
+        return
+    
+    # 清空题目数据
+    plugin_data["questions"] = []
+    global current_question_id
+    current_question_id = None
+    save_data()
+    
+    await clear_questions.send("所有题目已清空！")
 
 # 处理答题
 @answer.handle()
