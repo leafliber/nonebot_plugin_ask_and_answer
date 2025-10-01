@@ -38,6 +38,7 @@ def save_data():
 # 命令注册
 next_question = on_command("a下一题")
 switch_question = on_command("a切换题目")
+question_answered = on_command("aa题目作答情况")
 ranking = on_command("a排行榜")
 add_question = on_command("a添加题目", permission=SUPERUSER)
 clear_questions = on_command("a清空题目", permission=SUPERUSER)
@@ -87,11 +88,11 @@ async def handle_switch_question(event: GroupMessageEvent, msg: Message = Comman
     save_data()
     await switch_question.send(f"已切换到题目ID: {target_id}")
 
-# 处理a排行榜
-@ranking.handle()
-async def handle_ranking(event: GroupMessageEvent):
+# 处理a题目作答情况
+@question_answered.handle()
+async def handle_question_answered(event: GroupMessageEvent):
     if not plugin_data["questions"]:
-        await ranking.send("暂无题目数据")
+        await question_answered.send("暂无题目数据")
         return
     
     leaderboard = []
@@ -100,10 +101,60 @@ async def handle_ranking(event: GroupMessageEvent):
             leaderboard.append(f"题目{q['id']}: {answered_by['nickname']}({answered_by['user_id']})")
     
     if not leaderboard:
+        await question_answered.send("暂无答题记录")
+        return
+
+    await question_answered.send("答题排行榜:\n" + "\n".join(leaderboard))
+
+# 处理a排行榜（按用户答题数量排序）
+@ranking.handle()
+async def handle_ranking(event: GroupMessageEvent):
+    # 统计每个用户的答题数量
+    user_stats = {}
+    for q in plugin_data["questions"]:
+        if answered_by := q.get("answered_by"):
+            user_id = answered_by["user_id"]
+            nickname = answered_by["nickname"]
+            
+            if user_id not in user_stats:
+                user_stats[user_id] = {
+                    "nickname": nickname,
+                    "count": 0
+                }
+            user_stats[user_id]["count"] += 1
+    
+    if not user_stats:
         await ranking.send("暂无答题记录")
         return
     
-    await ranking.send("答题排行榜:\n" + "\n".join(leaderboard))
+    # 转换为列表并按答题数量排序
+    sorted_users = sorted(
+        user_stats.items(),
+        key=lambda x: x[1]["count"],
+        reverse=True
+    )
+    
+    # 获取所有用户数量
+    total_users = len(sorted_users)
+    
+    # 构建排行榜消息
+    leaderboard = []
+    
+    # 处理人数不足5人的情况
+    if total_users < 5:
+        # 显示所有用户
+        for rank, (user_id, data) in enumerate(sorted_users, 1):
+            leaderboard.append(f"{rank}. {data['nickname']} ({user_id}) - {data['count']}题")
+    else:
+        # 只取前5名
+        top_users = sorted_users[:5]
+        for rank, (user_id, data) in enumerate(top_users, 1):
+            leaderboard.append(f"{rank}. {data['nickname']} ({user_id}) - {data['count']}题")
+        
+        # 添加总用户数信息
+        leaderboard.append(f"\n共{total_users}位用户参与答题")
+    
+    await ranking.send("答题排行榜（按答题数量排序）:\n" + "\n".join(leaderboard))
 
 # 处理添加题目
 @add_question.handle()
@@ -142,17 +193,6 @@ async def handle_add_question(event: MessageEvent, msg: Message = CommandArg()):
 
 @clear_questions.handle()
 async def handle_clear_questions(event: MessageEvent):
-    # 确认操作
-    await clear_questions.send("⚠️ 确定要清空所有题目吗？这将删除所有题目和答题记录！请回复 '确认清空' 来确认操作")
-    
-    # 等待用户确认
-    confirm = await clear_questions.receive()
-    confirm_msg = confirm.get_plaintext().strip()
-    
-    if confirm_msg != "确认清空":
-        await clear_questions.send("操作已取消")
-        return
-    
     # 清空题目数据
     plugin_data["questions"] = []
     global current_question_id
