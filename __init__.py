@@ -9,10 +9,10 @@ from nonebot.params import CommandArg
 from nonebot.typing import T_State
 
 # 插件数据存储路径
-DATA_PATH = Path(__file__).parent / "questions.json"
+DATA_PATH = "data/questions.json"
 
 # 初始化数据结构
-if not DATA_PATH.exists():
+if not os.path.exists(DATA_PATH):
     with open(DATA_PATH, "w", encoding="utf-8") as f:
         json.dump({
             "questions": [],
