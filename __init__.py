@@ -143,8 +143,7 @@ async def handle_add_question(event: MessageEvent, msg: Message = CommandArg()):
 @clear_questions.handle()
 async def handle_clear_questions(event: MessageEvent):
     # 确认操作
-    await clear_questions.send("⚠️ 确定要清空所有题目吗？这将删除所有题目和答题记录！")
-    await clear_questions.send("请回复 '确认清空' 来确认操作")
+    await clear_questions.send("⚠️ 确定要清空所有题目吗？这将删除所有题目和答题记录！请回复 '确认清空' 来确认操作")
     
     # 等待用户确认
     confirm = await clear_questions.receive()
