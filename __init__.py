@@ -89,7 +89,12 @@ async def handle_next_question(event: GroupMessageEvent):
     current_question_id = next_id
     plugin_data["current_question"] = current_question_id
     save_all()
-    await next_question.send(f"已切换到题目ID: {next_id}")
+    # 获取题目内容
+    question = next((q for q in plugin_data["questions"] if q["id"] == current_question_id), None)
+    if question:
+        await next_question.send(f"已切换到题目ID: {next_id}\n题目内容：{question['question']}")
+    else:
+        await next_question.send(f"已切换到题目ID: {next_id}")
 
 # 处理a切换题目
 @switch_question.handle()
@@ -111,7 +116,12 @@ async def handle_switch_question(event: GroupMessageEvent, msg: Message = Comman
     current_question_id = target_id
     plugin_data["current_question"] = current_question_id
     save_all()
-    await switch_question.send(f"已切换到题目ID: {target_id}")
+    # 获取题目内容
+    question = next((q for q in plugin_data["questions"] if q["id"] == current_question_id), None)
+    if question:
+        await switch_question.send(f"已切换到题目ID: {target_id}\n题目内容：{question['question']}")
+    else:
+        await switch_question.send(f"已切换到题目ID: {target_id}")
 
 # 处理a题目作答情况
 @question_answered.handle()
