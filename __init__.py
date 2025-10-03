@@ -10,7 +10,7 @@ from nonebot.typing import T_State
 from nonebot.permission import SUPERUSER
 
 # 多题库支持
-DATA_DIR = "data"
+DATA_DIR = "data/nonebot_plugin_ask_and_answer"
 META_PATH = os.path.join(DATA_DIR, "meta.json")  # 存储当前题库名
 
 def ensure_data_dir():
