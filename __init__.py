@@ -162,11 +162,11 @@ async def handle_ranking(event: GroupMessageEvent):
     )
     total_users = len(sorted_users)
     leaderboard = []
-    if total_users < 5:
+    if total_users < 10:
         for rank, (user_id, data) in enumerate(sorted_users, 1):
             leaderboard.append(f"{rank}. {data['nickname']} ({user_id}) - {data['count']}题")
     else:
-        top_users = sorted_users[:5]
+        top_users = sorted_users[:10]
         for rank, (user_id, data) in enumerate(top_users, 1):
             leaderboard.append(f"{rank}. {data['nickname']} ({user_id}) - {data['count']}题")
         leaderboard.append(f"\n共{total_users}位用户参与答题")
